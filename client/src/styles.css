@@ -1,0 +1,66 @@
+:root{
+  --bg:#0f1724;
+  --card:#0b1220;
+  --accent:#7dd3fc;
+  --muted:#94a3b8;
+  --success:#34d399;
+  --warning:#fbbf24;
+  --error:#ef4444;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#021024,#051428);color:#e6eef8}
+.app{max-width:1100px;margin:24px auto;padding:18px}
+.app-header{display:flex;align-items:center;justify-content:space-between}
+.app-header h1{margin:0;font-size:20px}
+.dashboard{display:flex;gap:18px}
+.left{width:38%}
+.right{flex:1}
+.controls{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.sync-status{font-size:12px;color:var(--muted);padding:8px;border-radius:6px;background:rgba(125,211,252,0.08)}
+.btn{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#012;cursor:pointer;font-weight:500;transition:all 0.2s}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 12px rgba(125,211,252,0.2)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#e6eef8}
+.btn.ghost:hover:not(:disabled){background:rgba(255,255,255,0.05)}
+.btn.small{padding:6px 10px;font-size:12px}
+.calendar{display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px}
+.week{display:flex;gap:6px}
+.day{flex:1;padding:6px;border-radius:6px;min-height:64px;cursor:pointer;transition:background 0.2s}
+.day:hover{background:rgba(255,255,255,0.04)}
+.date{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;background:rgba(125,211,252,0.12);padding:2px 6px;border-radius:6px;margin-top:6px;font-size:12px}
+.badges{display:flex;flex-wrap:wrap;gap:4px}
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-card{display:flex;justify-content:space-between;align-items:flex-start;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--accent);transition:background 0.2s}
+.task-card:hover{background:rgba(255,255,255,0.05)}
+.task-main{flex:1}
+.task-main h4{margin:0 0 4px 0;font-size:15px}
+.task-main h4 + .meta{margin-bottom:6px}
+.meta{font-size:12px;color:var(--muted)}
+.explanation{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic}
+.task-side{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.suitability{padding:6px 8px;border-radius:6px;text-transform:uppercase;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px}
+.suitability.good{background:rgba(52,211,153,0.12);color:#86efac}
+.suitability.maybe{background:rgba(250,204,21,0.12);color:#fbbf24}
+.suitability.bad{background:rgba(239,68,68,0.12);color:#fca5a5}
+.suitability.unknown,.suitability.n\/a{background:rgba(148,163,184,0.08);color:#cbd5e1}
+.score{font-size:10px;opacity:0.8}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn 0.2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:linear-gradient(180deg,#081026,#07101a);padding:20px;border-radius:10px;min-width:360px;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.5);animation:slideUp 0.3s}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal h3{margin:0 0 16px 0;font-size:18px}
+.modal label{display:block;margin:12px 0 4px 0;font-size:13px;font-weight:500}
+.modal label.checkbox{display:flex;align-items:center;margin:12px 0;gap:8px;font-weight:400}
+.modal label.checkbox input{margin:0}
+.modal input,.modal textarea{width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:inherit;font-family:inherit;transition:border-color 0.2s}
+.modal input:focus,.modal textarea:focus{outline:none;border-color:var(--accent);background:rgba(125,211,252,0.05)}
+.error-message{background:rgba(239,68,68,0.12);color:#fca5a5;padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:12px;border-left:3px solid var(--error)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.app-footer{text-align:center;margin-top:18px;color:var(--muted);font-size:13px}
+@media (max-width: 768px) {
+  .dashboard{flex-direction:column}
+  .left{width:100%}
+  .modal{min-width:90vw;max-width:none}
+}
