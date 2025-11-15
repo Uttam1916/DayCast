@@ -8,6 +8,7 @@ import { scheduleReminderForTask } from '../utils/notify'
 
 export default function Dashboard() {
   const [tasks, setTasks] = useLocalTasks()
+  const tasksRef = React.useRef(tasks)
   const [showModal, setShowModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [syncStatus, setSyncStatus] = useState(null)
@@ -32,15 +33,6 @@ export default function Dashboard() {
           resp.data.forEach(s => { map[s.id] = { ...map[s.id], ...s, synced: true } })
           return Object.values(map)
         })
-        // trigger evaluation for tasks missing aiSuitability (server may not have run it)
-        resp.data.forEach(async s => {
-          if (s.outdoor && s.location?.lat && s.location?.lon && !s.aiSuitability) {
-            const ev = await evaluateTaskOnServer(s.id)
-            if (ev.success) {
-              setTasks(prev => prev.map(p => p.id === s.id ? { ...p, ...ev.data, synced: true } : p))
-            }
-          }
-        })
       }
     }
     loadServerTasks()
@@ -48,29 +40,34 @@ export default function Dashboard() {
     return () => { mounted = false; window.removeEventListener('online', loadServerTasks) }
   }, [setTasks])
 
+  // keep a ref to latest tasks so single sync listener can access it without re-registering
+  useEffect(() => { tasksRef.current = tasks }, [tasks])
+
   useEffect(() => {
-    // try syncing unsynced tasks when online
+    // register a single sync listener on mount only (never re-register)
     async function trySync() {
-      if (navigator.onLine && tasks.some(t => !t.synced)) {
+      const current = tasksRef.current || []
+      if (navigator.onLine && current.some(t => !t.synced)) {
         setSyncStatus('syncing...')
-        const result = await syncUnsyncedTasks(tasks)
+        const result = await syncUnsyncedTasks(current)
         if (result) {
           const updated = result.synced
           setTasks(prev => {
             // replace by id with synced flag
             const map = Object.fromEntries(prev.map(p => [p.id, p]))
-            updated.forEach(u => { map[u.id] = { ...u, synced: true } })
+            updated.forEach(u => { map[u.id] = { ...map[u.id], ...u, synced: true } })
             return Object.values(map)
           })
           setSyncStatus(result.failed.length > 0 ? 'sync partial' : 'synced')
         }
       }
     }
-    
+
     window.addEventListener('online', trySync)
+    // try at mount as well
     trySync()
-    return () => window.removeEventListener('online', trySync)
-  }, [tasks, setTasks])
+    return () => { window.removeEventListener('online', trySync) }
+  }, []) // empty deps: only register once on mount
 
   async function handleSave(task) {
     setLoading(true)
@@ -82,8 +79,18 @@ export default function Dashboard() {
       // try save to backend
       const response = await apiCreateTask(task)
       if (response.success) {
+        const savedTask = { ...response.data, synced: true }
         // replace local task with saved version
-        setTasks(prev => prev.map(p => p.id === task.id ? { ...response.data, synced: true } : p))
+        setTasks(prev => prev.map(p => p.id === task.id ? savedTask : p))
+        
+        // if outdoor task with location, trigger evaluation to get AI suggestions
+        if (savedTask.outdoor && savedTask.location?.lat && savedTask.location?.lon) {
+          const evalResp = await evaluateTaskOnServer(savedTask.id)
+          if (evalResp.success) {
+            // update task with AI suitability
+            setTasks(prev => prev.map(p => p.id === savedTask.id ? { ...p, ...evalResp.data, synced: true } : p))
+          }
+        }
         setSyncStatus(null)
       } else {
         // mark as unsynced for later retry

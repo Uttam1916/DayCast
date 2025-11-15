@@ -94,3 +94,13 @@ export async function evaluateTaskOnServer(id) {
     return { success: false, error: message }
   }
 }
+
+export async function deleteTask(id) {
+  try {
+    const r = await axios.delete(`${API_BASE}/tasks/${id}`)
+    return { success: true, message: r.data?.message || 'Task deleted' }
+  } catch (error) {
+    const message = error.response?.data?.error || error.message || 'Failed to delete task'
+    return { success: false, error: message }
+  }
+}

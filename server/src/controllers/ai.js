@@ -1,10 +1,18 @@
-const OpenAI = require('openai')
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const { evaluateHeuristic } = require('../utils/evaluate')
 
+let openai = null
+try {
+  if (process.env.OPENAI_API_KEY) {
+    const OpenAI = require('openai')
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  }
+} catch (e) {
+  console.warn('OpenAI client init failed, will use heuristic only:', e.message)
+}
+
 async function aiEvaluate(weatherPoint, task) {
-  // fallback to heuristic if no API key
-  if (!process.env.OPENAI_API_KEY) {
+  // fallback to heuristic if no API key or weatherPoint missing or openai init failed
+  if (!openai || !weatherPoint) {
     return evaluateHeuristic(weatherPoint, task)
   }
 
@@ -21,23 +29,24 @@ async function aiEvaluate(weatherPoint, task) {
   const system = "You are a weather advisor. Given input JSON, return only a JSON object with keys: decision ('good'|'bad'|'maybe'), score (0-100), explanation (short)."
   const user = `Input: ${JSON.stringify(features)}\nRespond with JSON only.`
 
-  const resp = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user }
-    ],
-    max_tokens: 300
-  })
-
-  const text = resp.choices?.[0]?.message?.content || ''
   try {
+    const resp = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ],
+      max_tokens: 300
+    })
+
+    const text = resp.choices?.[0]?.message?.content || ''
     const parsed = JSON.parse(text)
     // normalize
     parsed.score = typeof parsed.score === 'number' ? parsed.score : 50
     return parsed
   } catch (e) {
-    // fallback to heuristic
+    // fallback to heuristic on any error (API quota, network, parse, etc.)
+    console.warn('AI evaluation failed, using heuristic:', e.message)
     return evaluateHeuristic(weatherPoint, task)
   }
 }

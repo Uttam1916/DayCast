@@ -10,6 +10,20 @@ const { aiEvaluate } = require('../controllers/ai')
 router.post('/', async (req, res) => {
   try {
     const body = req.body
+    // simple duplicate detection: if a task with same title and exact date exists, return it
+    try {
+      if (body.title && body.date) {
+        const maybeDate = new Date(body.date)
+        const existing = await Task.findOne({ title: body.title, date: maybeDate })
+        if (existing) {
+          // return existing instead of creating duplicate
+          return res.json(existing)
+        }
+      }
+    } catch (e) {
+      // ignore duplicate-check errors and proceed to create
+      console.warn('duplicate check failed', e.message)
+    }
     
     // Handle location string -> geocode if needed
     let location = body.location || {}
@@ -36,20 +50,6 @@ router.post('/', async (req, res) => {
     })
     await task.save()
 
-    // if outdoor and location provided then evaluate immediately
-    if (task.outdoor && task.location?.lat && task.location?.lon) {
-      try {
-        const fc = await getForecast(task.location.lat, task.location.lon)
-        const ts = Math.floor(new Date(task.date).getTime() / 1000)
-        const point = findClosestHourly(fc.hourly || [], ts)
-        // try AI then fallback heuristic
-        const result = await aiEvaluate(point, task)
-        task.aiSuitability = result
-        await task.save()
-      } catch (e) {
-        console.warn('weather/eval failed', e.message)
-      }
-    }
     res.json(task)
   } catch (e) { 
     console.error('POST /api/tasks error:', e.message)
@@ -78,6 +78,15 @@ router.post('/:id/evaluate', async (req, res) => {
     task.aiSuitability = result
     await task.save()
     res.json(task)
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// delete task by id
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await Task.findByIdAndDelete(req.params.id)
+    if (!result) return res.status(404).json({ error: 'task not found' })
+    res.json({ success: true, message: 'task deleted', id: req.params.id })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

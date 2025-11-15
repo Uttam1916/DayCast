@@ -30,7 +30,9 @@ const Task = mongoose.models.Task || mongoose.model('Task', TaskSchema)
 
 // connect DB
 async function connectDB() {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/calorietrack'
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/daycast'
+  console.log('MONGODB_URI (env):', process.env.MONGODB_URI ? '[provided]' : '[not set]')
+  console.log('Attempting to connect to MongoDB at:', uri)
   await mongoose.connect(uri)
   console.log('Connected to MongoDB:', uri)
 }
