@@ -12,7 +12,6 @@ Before you start, make sure you have:
   - Cloud: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (free tier available)
 - **API Keys** (free):
   - [OpenWeatherMap](https://openweathermap.org/api) - Get free API key
-  - [OpenAI](https://platform.openai.com/account/api-keys) - Get API key (requires payment setup)
 
 ### 2️⃣ Clone & Install
 
@@ -49,9 +48,6 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/daycast?retryWri
 
 # Get from https://openweathermap.org/api
 OWM_KEY=your_openweathermap_api_key_here
-
-# Get from https://platform.openai.com/account/api-keys
-OPENAI_API_KEY=your_openai_api_key_here
 
 # Any random string (change in production!)
 JWT_SECRET=super_secret_key_change_this_in_production
@@ -161,13 +157,17 @@ brew services start mongodb-community  # macOS
 3. Location format is correct (city name or lat,lon)
 4. No typos in API key
 
-### "AI evaluation failing / returning generic response"
+### "Weather data missing / Weather API failing"
 
 **Check:**
-1. OPENAI_API_KEY is set
-2. API key has credits/payment method attached
-3. Check OpenAI usage dashboard
-4. App will fallback to heuristic scoring if AI unavailable
+1. OWM_KEY is set in `.env`
+2. API key is active and not rate-limited
+3. Location format is correct (city name or lat,lon)
+4. No typos in API key
+
+### "Suggestions not showing / Generic evaluation"
+
+**Note:** AI evaluation currently uses heuristic scoring (rule-based evaluation based on weather conditions and task preferences)
 
 ### "Frontend not loading / Blank page"
 
